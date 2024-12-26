@@ -15,7 +15,6 @@ import com.appier.ads.AppierError;
 import com.appier.ads.AppierInterstitialAd;
 import com.appier.ads.AppierNativeAd;
 import com.appier.ads.common.BrowserUtil;
-import com.appier.ads.common.ConsentStatus;
 import com.appier.ads.common.ImageLoader;
 import com.applovin.mediation.MaxAdFormat;
 import com.applovin.mediation.adapter.MaxAdViewAdapter;
@@ -63,23 +62,17 @@ public class AppierMediationAdapter extends MediationAdapterBase implements MaxI
 
     @Override
     public void initialize(MaxAdapterInitializationParameters maxAdapterInitializationParameters, Activity activity, OnCompletionListener onCompletionListener) {
-        Appier.setTestMode(Appier.TestMode.BID);
-        Appier.setGDPRApplies(true);
-        Appier.setConsentStatus(ConsentStatus.EXPLICIT_YES);
-        Appier.setCoppaApplies(true);
-        Appier.setBrowserAgent(Appier.BrowserAgent.NATIVE);
-
         onCompletionListener.onCompletion(InitializationStatus.INITIALIZED_SUCCESS, null);
     }
 
     @Override
     public String getSdkVersion() {
-        return Appier.getVersionName();
+        return AppierAdapterConfiguration.getNetworkSdkVersion();
     }
 
     @Override
     public String getAdapterVersion() {
-        return "1.0.0";
+        return AppierAdapterConfiguration.getMediationVersion();
     }
 
     @Override
@@ -254,8 +247,7 @@ public class AppierMediationAdapter extends MediationAdapterBase implements MaxI
                                 imageView.setImageDrawable(optionImageDrawable);
                                 imageView.setBackgroundColor(Color.TRANSPARENT);
                                 builder.setOptionsView(imageView);
-                            }
-                            else {
+                            } else {
                                 AppierLog("Drawable for option view is null");
                             }
 
@@ -316,7 +308,7 @@ public class AppierMediationAdapter extends MediationAdapterBase implements MaxI
         nativeAd.loadAdWithExternalCache();
     }
 
-    // helper class to map AppierNativeAd to MaxNativeAd
+    // Helper class to map AppierNativeAd to MaxNativeAd
     private class MaxAppierNativeAd
             extends MaxNativeAd {
 
@@ -372,7 +364,7 @@ public class AppierMediationAdapter extends MediationAdapterBase implements MaxI
                 });
             }
 
-            // setup click action for other clickable views
+            // Setup click action for other clickable views
             for (final View clickableView : clickableViews) {
                 clickableView.setOnClickListener(new View.OnClickListener() {
                     @Override

@@ -2,6 +2,7 @@ package com.appier.ads.applovin;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +15,7 @@ import com.appier.ads.AppierError;
 import com.appier.ads.AppierInterstitialAd;
 import com.appier.ads.AppierNativeAd;
 import com.appier.ads.common.BrowserUtil;
+import com.appier.ads.common.ConsentStatus;
 import com.appier.ads.common.ImageLoader;
 import com.applovin.mediation.MaxAdFormat;
 import com.applovin.mediation.adapter.MaxAdViewAdapter;
@@ -61,6 +63,12 @@ public class AppierMediationAdapter extends MediationAdapterBase implements MaxI
 
     @Override
     public void initialize(MaxAdapterInitializationParameters maxAdapterInitializationParameters, Activity activity, OnCompletionListener onCompletionListener) {
+        Appier.setTestMode(Appier.TestMode.BID);
+        Appier.setGDPRApplies(true);
+        Appier.setConsentStatus(ConsentStatus.EXPLICIT_YES);
+        Appier.setCoppaApplies(true);
+        Appier.setBrowserAgent(Appier.BrowserAgent.NATIVE);
+
         onCompletionListener.onCompletion(InitializationStatus.INITIALIZED_SUCCESS, null);
     }
 
@@ -110,7 +118,7 @@ public class AppierMediationAdapter extends MediationAdapterBase implements MaxI
             @Override
             public void onAdNoBid(AppierBannerAd appierBannerAd) {
                 AppierLog("onAdNoBid");
-                adapterListener.onAdViewAdLoadFailed(toMaxError(MaxAdapterError.ERROR_CODE_NO_FILL, "Ad No Bid"));
+                adapterListener.onAdViewAdLoadFailed(toMaxError(MaxAdapterError.ERROR_CODE_UNSPECIFIED, "Ad No Bid"));
             }
 
             @Override
@@ -216,26 +224,39 @@ public class AppierMediationAdapter extends MediationAdapterBase implements MaxI
 
                     String iconImageUrl = appierNativeAd.getIconImageUrl();
                     String mainImageUrl = appierNativeAd.getMainImageUrl();
+                    String optionImageUrl = appierNativeAd.getPrivacyInformationIconImageUrl();
 
                     ImageLoader imageLoader = new ImageLoader(context);
-                    imageLoader.batchLoadImages(Arrays.asList(mainImageUrl, iconImageUrl), new ImageLoader.OnBatchImageEventListenerWithResult() {
+                    imageLoader.batchLoadImages(Arrays.asList(mainImageUrl, iconImageUrl, optionImageUrl), new ImageLoader.OnBatchImageEventListenerWithResult() {
                         @Override
                         public void onBatchImageLoadedAndCached(List<Drawable> drawables) {
                             Drawable mainImageDrawable = drawables.get(0);
                             Drawable iconImageDrawable = drawables.get(1);
+                            Drawable optionImageDrawable = drawables.get(2);
                             // The main image must be set by setMediaView
                             if (mainImageDrawable != null) {
                                 ImageView imageView = new ImageView(context);
-                                imageView.setImageDrawable(drawables.get(0));
+                                imageView.setImageDrawable(mainImageDrawable);
+                                imageView.setAdjustViewBounds(true);
                                 builder.setMediaView(imageView);
                             } else {
                                 AppierLog("Drawable for media view is null");
                             }
 
                             if (iconImageDrawable != null) {
-                                builder.setIcon(new MaxNativeAd.MaxNativeAdImage(drawables.get(1)));
+                                builder.setIcon(new MaxNativeAd.MaxNativeAdImage(iconImageDrawable));
                             } else {
                                 AppierLog("Drawable for icon is null");
+                            }
+
+                            if (optionImageDrawable != null) {
+                                ImageView imageView = new ImageView(context);
+                                imageView.setImageDrawable(optionImageDrawable);
+                                imageView.setBackgroundColor(Color.TRANSPARENT);
+                                builder.setOptionsView(imageView);
+                            }
+                            else {
+                                AppierLog("Drawable for option view is null");
                             }
 
                             MaxAppierNativeAd maxAppierNativeAd = new MaxAppierNativeAd(builder, context, adapterListener);
@@ -255,7 +276,7 @@ public class AppierMediationAdapter extends MediationAdapterBase implements MaxI
             @Override
             public void onAdNoBid(AppierNativeAd appierNativeAd) {
                 AppierLog("onAdNoBid");
-                adapterListener.onNativeAdLoadFailed(toMaxError(MaxAdapterError.ERROR_CODE_NO_FILL, "Ad No Bid"));
+                adapterListener.onNativeAdLoadFailed(toMaxError(MaxAdapterError.ERROR_CODE_UNSPECIFIED, "Ad No Bid"));
             }
 
             @Override
@@ -335,6 +356,23 @@ public class AppierMediationAdapter extends MediationAdapterBase implements MaxI
                 clickableViews.add(getMediaView());
             }
 
+            // Setup option view click action if exists
+            if (getOptionsView() != null) {
+                getOptionsView().setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        try {
+                            if (browserUtil.tryToOpenUrl(appierNativeAd.getPrivacyInformationIconClickThroughUrl())) {
+                                listener.onNativeAdClicked();
+                            }
+                        } catch (JSONException e) {
+                            AppierLog("Fail to open privacy information url when native ad clicked");
+                        }
+                    }
+                });
+            }
+
+            // setup click action for other clickable views
             for (final View clickableView : clickableViews) {
                 clickableView.setOnClickListener(new View.OnClickListener() {
                     @Override

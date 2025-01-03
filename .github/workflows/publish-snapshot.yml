@@ -1,0 +1,9 @@
+name: Publish Snapshot Packages
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish-snapshot:
+    uses: ./.github/workflows/reusable-publish-snapshot.yml
+    secrets: inherit

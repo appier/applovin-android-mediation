@@ -10,39 +10,17 @@ android {
         minSdk 19
         targetSdk 34
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
         multiDexEnabled true
         buildConfigField "String", "APPIER_ADVERTISER_NAME", '"Appier"'
         buildConfigField "String", "VERSION_NAME", "\"${versionName}\""
     }
 
     buildTypes {
-        debug {
-            testCoverageEnabled true
-        }
         release {
             minifyEnabled false
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-
-    flavorDimensions "network"
-    productFlavors {
-        dev {
-//            buildConfigField "String", "APPIER_ADVERTISER_NAME", '"Appier"'
-//            buildConfigField "String", "VERSION_NAME", "\"${defaultConfig.versionName}\""
-            dimension "network"
-        }
-        staging {
-//            buildConfigField "String", "APPIER_ADVERTISER_NAME", '"Appier"'
-//            buildConfigField "String", "VERSION_NAME", "\"${defaultConfig.versionName}\""
-            dimension "network"
-        }
-        production {
-//            buildConfigField "String", "APPIER_ADVERTISER_NAME", '"Appier"'
-//            buildConfigField "String", "VERSION_NAME", "\"${defaultConfig.versionName}\""
-            dimension "network"
         }
     }
 
@@ -57,18 +35,26 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', includes: ['*.jar'])
     // appier-ads-android local
-    implementation project(':appier-ads-android')
-    //
-//    implementation ""
+//    implementation project(':appier-ads-android')
+
+    // appier-ads-android maven
+    api "com.appier:ads-android:2.0.2-alpha.5"
+    // appier-ads-android-debug maven
+//    implementation "com.appier:ads-android-debug:2.0.2-alpha.4"
 
     implementation "junit:junit:4.13.2"
     implementation "androidx.appcompat:appcompat:1.2.0"
     implementation "com.google.android.material:material:1.4.0"
 
     // applovin
-    implementation("com.applovin:applovin-sdk:13.0.1")
+    api("com.applovin:applovin-sdk:13.0.1")
 
     testImplementation "junit:junit:4.13.2"
     androidTestImplementation "androidx.test.ext:junit:1.1.5"
     androidTestImplementation "androidx.test.espresso:espresso-core:3.5.1"
 }
+
+project.version = android.defaultConfig.versionName
+
+apply from: "tools.gradle"
+apply from: "publish.gradle"

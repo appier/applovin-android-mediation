@@ -1,0 +1,57 @@
+name: Continuous Integration
+
+on: 
+  pull_request:
+    types: [ opened, synchronize, labeled, ready_for_review ]
+  push:
+    branches:
+      - master # PR merged to master
+      - develop
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-context:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
+  build-and-test:
+    needs: [check-context]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Ref: https://remarkablemark.org/blog/2020/12/12/commitlint-in-github-actions-workflow/
+      - uses: actions/setup-java@v3
+        with:
+          distribution: corretto
+          java-version: 11
+
+      - name: Run lint and unit tests
+        run: |
+          ./gradlew --continue \
+              :appier-applovin-mediation:lint \
+              :appier-applovin-mediation:testDebug \
+              :appier-applovin-mediation:testRelease \
+
+        env:
+          GRADLE_OPTS: -Dorg.gradle.daemon=false
+
+  deploy-test-packages:
+    needs: [ build-and-test ]
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'deploy_test_packages') }}
+    uses: ./.github/workflows/reusable-publish-snapshot.yml
+    secrets: inherit
+
+  deploy-release-packages:
+    needs: [ build-and-test ]
+    if: ${{ startsWith(github.head_ref, 'release') }}
+    uses: ./.github/workflows/reusable-publish-release.yml
+    secrets: inherit

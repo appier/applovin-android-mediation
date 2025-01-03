@@ -1,0 +1,9 @@
+name: Publish Release Packages
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish-release:
+    uses: ./.github/workflows/reusable-publish-release.yml
+    secrets: inherit

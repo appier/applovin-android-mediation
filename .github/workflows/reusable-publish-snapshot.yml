@@ -1,0 +1,43 @@
+name: Reusable - Publish Snapshot Packages
+
+on:
+  workflow_call:
+    secrets:
+      SIGNING_KEY_ID:
+        required: true
+      SIGNING_KEY_PASSWORD:
+        required: true
+      OSSRH_USERNAME:
+        required: true
+      OSSRH_PASSWORD:
+        required: true
+jobs:
+  reusable-publish-snapshot:
+    runs-on: ubuntu-latest
+    env:
+      SIGNING_KEY_FILE: /tmp/maven-central.gpg
+      SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
+      SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+      OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+      OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: corretto
+          java-version: 11
+
+      - name: Define the version name
+        run: echo "VERSION=${{ github.run_id }}-SNAPSHOT" >> $GITHUB_ENV
+      - name: Print the version name
+        run: echo "Deploying com.appier:applovin-android:${VERSION} and com.appier:applovin-android-debug:${VERSION}"
+      - name: Restore GPG keyring file
+        run: echo "${{ secrets.SIGNING_KEY_FILE_BASE64 }}" | base64 -d > ${SIGNING_KEY_FILE}
+      - name: Deploy com.appier:appier-android to https://s01.oss.sonatype.org/content/repositories/snapshots/
+        run: ./gradlew appier-applovin-mediation:publish -Dpublication=release -Pversion=${VERSION}
+        env:
+          GRADLE_OPTS: -Dorg.gradle.daemon=false
+      - name: Deploy com.appier:applovin-android-debug to https://s01.oss.sonatype.org/content/repositories/snapshots/
+        run: ./gradlew appier-applovin-mediation:publish -Dpublication=debug -Pversion=${VERSION}
+        env:
+          GRADLE_OPTS: -Dorg.gradle.daemon=false

@@ -12,6 +12,7 @@ buildscript {
         google()
         mavenLocal()
         mavenCentral()
+        maven { url 'https://s01.oss.sonatype.org/content/groups/staging/' }
     }
     dependencies {
         classpath "com.android.tools.build:gradle:${gradleVersion}"
@@ -25,6 +26,7 @@ allprojects {
         google()
         mavenLocal()
         mavenCentral()
+        maven { url 'https://s01.oss.sonatype.org/content/groups/staging/' }
     }
 }
 

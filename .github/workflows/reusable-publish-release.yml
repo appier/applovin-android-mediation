@@ -1,0 +1,36 @@
+name: Reusable - Publish Release Packages
+
+on:
+  workflow_call:
+    secrets:
+      SIGNING_KEY_ID:
+        required: true
+      SIGNING_KEY_PASSWORD:
+        required: true
+      OSSRH_USERNAME:
+        required: true
+      OSSRH_PASSWORD:
+        required: true
+
+jobs:
+  reusable-publish-release:
+    runs-on: ubuntu-latest
+    env:
+      SIGNING_KEY_FILE: /tmp/maven-central.gpg
+      SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
+      SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+      OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+      OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: corretto
+          java-version: 11
+
+      - name: Restore GPG keyring file
+        run: echo "${{ secrets.SIGNING_KEY_FILE_BASE64 }}" | base64 -d > ${SIGNING_KEY_FILE}
+      - name: Deploy com.appier:applovin-android-android to https://s01.oss.sonatype.org/content/groups/staging/
+        run: ./gradlew appier-applovin-mediation:publish -Dpublication=release
+        env:
+          GRADLE_OPTS: -Dorg.gradle.daemon=false

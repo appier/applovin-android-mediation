@@ -1,0 +1,92 @@
+// Reference: https://proandroiddev.com/publishing-android-libraries-to-mavencentral-in-2021-8ac9975c3e52
+// Note: use hkp://keyserver.ubuntu.com to upload GPG key, or mavenCentral() may not find the key...
+
+apply plugin: 'signing'
+apply from: "publish-mapping.gradle"
+
+tasks.withType(Sign) {
+    onlyIf { !version.endsWith("SNAPSHOT") && !version.endsWith("LOCAL") }
+}
+
+ext['signing.secretKeyRingFile'] = getLocalPropertyOrEnv('signing.key.file')
+ext['signing.keyId'] = getLocalPropertyOrEnv('signing.key.id')
+ext['signing.password'] = getLocalPropertyOrEnv('signing.key.password')
+
+signing {
+    sign publishing.publications
+}
+
+ext['ossrhUsername'] = getLocalPropertyOrEnv('ossrh.username')
+ext['ossrhPassword'] = getLocalPropertyOrEnv('ossrh.password')
+
+publishing {
+    repositories {
+        maven {
+            // This is for test with local environment.
+            // DO MAKE SURE the version in gradle.properties is appended with "-LOCAL"
+            // when executing the following command for publishing:
+            // ./gradlew publish -Dpublication=release
+            // (You can specify JAVA by appending "-Dorg.gradle.java.home=/Users/${user}/Library/Java/JavaVirtualMachines/corretto-11.0.21/Contents/Home")
+            String publication = getPublication()
+            components.each { component ->
+                System.out.println "Component name: ${component.name}"
+            }
+            if (project.version.endsWith('-LOCAL')) {
+                String mavenLocal = "$projectDir/build/mavenLocal/${publication}"
+                name = 'mavenLocal'
+                url = "file://$mavenLocal"
+
+                //TODO:  for proguard mapping file latter
+//                publish.doLast {
+//                    if (mapping.exists()) {
+//                        println("mapping file: $mapping")
+//                        copy {
+//                            from mapping
+//                            into "$mavenLocal"
+//                            rename {
+//                                "mapping_${version}.txt"
+//                            }
+//                        }
+//                    } else {
+//                        println("no mapping file: $projectDir")
+//                    }
+//                }
+            } else {
+                name = 'mavenCentral'
+                if (project.version.endsWith('-SNAPSHOT')) {
+                    // Notes about snapshot repo:
+                    // 1. There is no 'close' and 'release' workflow like in staging repo
+                    // 2. What's a SNAPSHOT version semanticallly: https://maven.apache.org/guides/getting-started/index.html#What_is_a_SNAPSHOT_version
+                    // 3. Packages can only be resolved by using custom maven URL: `maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots/' }`
+                    url = 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
+                } else {
+                    // Notes about staging repo:
+                    // 1. It requires 'close' and 'release' workflow. Supposedly a closed package should only be released after QA activity.
+                    // 2. It will block versions end with '-SNAPSHOT' with '400 Bad Request'
+                    // 3. After 'close', packages can be resolved by using custom maven URL: `maven { url 'https://s01.oss.sonatype.org/content/groups/staging/' }`
+                    // 4. After 'release', packages will be sync to mavenCentral().
+                    url = 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
+
+                    //TODO: for proguard mapping file latter
+                    // If this build is a final release build, upload mapping files
+//                    if ("release" == publication) {
+//                        publish.doLast {
+//                            if (mapping.exists()) {
+//                                if (uploadMappingFile(mapping)) {
+//                                    println("upload mapping file success")
+//                                } else {
+//                                    println("upload mapping file failed")
+//                                    throw RuntimeException("Upload mapping failed")
+//                                }
+//                            }
+//                        }
+//                    }
+                }
+                credentials {
+                    username project.ossrhUsername
+                    password project.ossrhPassword
+                }
+            }
+        }
+    }
+}

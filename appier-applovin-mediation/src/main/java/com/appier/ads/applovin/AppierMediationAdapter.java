@@ -34,6 +34,7 @@ import org.json.JSONException;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public class AppierMediationAdapter extends MediationAdapterBase implements MaxInterstitialAdapter, MaxNativeAdAdapter, MaxAdViewAdapter {
     private AppierInterstitialAd appierInterstitialAd;
@@ -222,10 +223,10 @@ public class AppierMediationAdapter extends MediationAdapterBase implements MaxI
                     ImageLoader imageLoader = new ImageLoader(context);
                     imageLoader.batchLoadImages(Arrays.asList(mainImageUrl, iconImageUrl, optionImageUrl), new ImageLoader.OnBatchImageEventListenerWithResult() {
                         @Override
-                        public void onBatchImageLoadedAndCached(List<Drawable> drawables) {
-                            Drawable mainImageDrawable = drawables.get(0);
-                            Drawable iconImageDrawable = drawables.get(1);
-                            Drawable optionImageDrawable = drawables.get(2);
+                        public void onBatchImageLoadedAndCached(Map<String, Drawable> drawables) {
+                            Drawable mainImageDrawable = drawables.get(mainImageUrl);
+                            Drawable iconImageDrawable = drawables.get(iconImageUrl);
+                            Drawable optionImageDrawable = drawables.get(optionImageUrl);
                             // The main image must be set by setMediaView
                             if (mainImageDrawable != null) {
                                 ImageView imageView = new ImageView(context);

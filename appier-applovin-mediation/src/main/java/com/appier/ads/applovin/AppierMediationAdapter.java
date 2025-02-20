@@ -2,8 +2,6 @@ package com.appier.ads.applovin;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -15,7 +13,6 @@ import com.appier.ads.AppierError;
 import com.appier.ads.AppierInterstitialAd;
 import com.appier.ads.AppierNativeAd;
 import com.appier.ads.common.BrowserUtil;
-import com.appier.ads.common.ImageLoader;
 import com.applovin.mediation.MaxAdFormat;
 import com.applovin.mediation.adapter.MaxAdViewAdapter;
 import com.applovin.mediation.adapter.MaxAdapterError;
@@ -32,9 +29,7 @@ import com.applovin.sdk.AppLovinSdk;
 
 import org.json.JSONException;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 public class AppierMediationAdapter extends MediationAdapterBase implements MaxInterstitialAdapter, MaxNativeAdAdapter, MaxAdViewAdapter {
     private AppierInterstitialAd appierInterstitialAd;
@@ -216,51 +211,17 @@ public class AppierMediationAdapter extends MediationAdapterBase implements MaxI
                             .setBody(appierNativeAd.getText())
                             .setCallToAction(appierNativeAd.getCallToActionText());
 
-                    String iconImageUrl = appierNativeAd.getIconImageUrl();
-                    String mainImageUrl = appierNativeAd.getMainImageUrl();
-                    String optionImageUrl = appierNativeAd.getPrivacyInformationIconImageUrl();
+                    ImageView main = new ImageView(context);
+                    ImageView icon = new ImageView(context);
+                    ImageView option = new ImageView(context);
+                    appierNativeAd.setupAdImages(main, icon, option);
 
-                    ImageLoader imageLoader = new ImageLoader(context);
-                    imageLoader.batchLoadImages(Arrays.asList(mainImageUrl, iconImageUrl, optionImageUrl), new ImageLoader.OnBatchImageEventListenerWithResult() {
-                        @Override
-                        public void onBatchImageLoadedAndCached(Map<String, Drawable> drawables) {
-                            Drawable mainImageDrawable = drawables.get(mainImageUrl);
-                            Drawable iconImageDrawable = drawables.get(iconImageUrl);
-                            Drawable optionImageDrawable = drawables.get(optionImageUrl);
-                            // The main image must be set by setMediaView
-                            if (mainImageDrawable != null) {
-                                ImageView imageView = new ImageView(context);
-                                imageView.setImageDrawable(mainImageDrawable);
-                                imageView.setAdjustViewBounds(true);
-                                builder.setMediaView(imageView);
-                            } else {
-                                AppierLog("Drawable for media view is null");
-                            }
+                    builder.setMediaView(main);
+                    builder.setIcon(new MaxNativeAd.MaxNativeAdImage(icon.getDrawable()));
+                    builder.setOptionsView(option);
 
-                            if (iconImageDrawable != null) {
-                                builder.setIcon(new MaxNativeAd.MaxNativeAdImage(iconImageDrawable));
-                            } else {
-                                AppierLog("Drawable for icon is null");
-                            }
-
-                            if (optionImageDrawable != null) {
-                                ImageView imageView = new ImageView(context);
-                                imageView.setImageDrawable(optionImageDrawable);
-                                imageView.setBackgroundColor(Color.TRANSPARENT);
-                                builder.setOptionsView(imageView);
-                            } else {
-                                AppierLog("Drawable for option view is null");
-                            }
-
-                            MaxAppierNativeAd maxAppierNativeAd = new MaxAppierNativeAd(builder, context, adapterListener);
-                            adapterListener.onNativeAdLoaded(maxAppierNativeAd, null);
-                        }
-
-                        @Override
-                        public void onBatchImageLoadFail() {
-                            adapterListener.onNativeAdLoadFailed(toMaxError(MaxAdapterError.ERROR_CODE_MISSING_REQUIRED_NATIVE_AD_ASSETS, "Fail to load images"));
-                        }
-                    });
+                    MaxAppierNativeAd maxAppierNativeAd = new MaxAppierNativeAd(builder, context, adapterListener);
+                    adapterListener.onNativeAdLoaded(maxAppierNativeAd, null);
                 } catch (JSONException e) {
                     adapterListener.onNativeAdLoadFailed(toMaxError(MaxAdapterError.ERROR_CODE_MISSING_REQUIRED_NATIVE_AD_ASSETS, "Fail to load images:" + e.getMessage()));
                 }
@@ -333,14 +294,20 @@ public class AppierMediationAdapter extends MediationAdapterBase implements MaxI
         @Override
         public boolean prepareForInteraction(final List<View> clickableViews, final ViewGroup container) {
             final AppierNativeAd appierNativeAd = nativeAd;
+
             if (nativeAd == null) {
-                Appier.log("Failed to register native ad views: native ad is null.");
+                Appier.log("Failed to register native ad views: Native ad is null.");
+                return false;
+            }
+
+            if (container == null) {
+                Appier.log("Failed to register native ad views: Container is null.");
                 return false;
             }
 
             // To avoid `java.lang.IllegalArgumentException: Invalid set of clickable views` with size=0
             if (clickableViews.isEmpty()) {
-                Appier.log("No clickable views to prepare");
+                Appier.log("Failed to register native ad views: No clickable views to prepare");
                 return false;
             }
 
@@ -349,37 +316,8 @@ public class AppierMediationAdapter extends MediationAdapterBase implements MaxI
                 clickableViews.add(getMediaView());
             }
 
-            // Setup option view click action if exists
-            if (getOptionsView() != null) {
-                getOptionsView().setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        try {
-                            if (browserUtil.tryToOpenUrl(appierNativeAd.getPrivacyInformationIconClickThroughUrl())) {
-                                listener.onNativeAdClicked();
-                            }
-                        } catch (JSONException e) {
-                            AppierLog("Fail to open privacy information url when native ad clicked");
-                        }
-                    }
-                });
-            }
-
-            // Setup click action for other clickable views
-            for (final View clickableView : clickableViews) {
-                clickableView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        try {
-                            if (browserUtil.tryToOpenUrl(appierNativeAd.getClickDestinationUrl())) {
-                                listener.onNativeAdClicked();
-                            }
-                        } catch (JSONException e) {
-                            AppierLog("Fail to open url when native ad clicked");
-                        }
-                    }
-                });
-            }
+            // Bind view events
+            appierNativeAd.bindAdViewInteractions(container, getOptionsView(), clickableViews);
             return true;
         }
     }

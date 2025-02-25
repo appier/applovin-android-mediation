@@ -44,7 +44,6 @@ dependencies {
     // appier-ads-android-debug maven
     // implementation "com.appier:ads-android-debug:2.0.2-alpha.4"
 
-    implementation "junit:junit:4.13.2"
     implementation "androidx.appcompat:appcompat:1.2.0"
     implementation "com.google.android.material:material:1.4.0"
 

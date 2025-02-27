@@ -10,7 +10,7 @@ android {
         minSdk 19
         targetSdk 34
         versionCode 1
-        versionName "1.0.0"
+        versionName "2.1.0"
         multiDexEnabled true
         buildConfigField "String", "APPIER_ADVERTISER_NAME", '"Appier"'
         buildConfigField "String", "VERSION_NAME", "\"${versionName}\""
@@ -36,20 +36,19 @@ dependencies {
     implementation fileTree(dir: 'libs', includes: ['*.jar'])
 
     // appier-ads-android local
-    api project(':appier-ads-android')
+//     implementation project(':appier-ads-android')
 
     // appier-ads-android maven
-    // api "com.appier:ads-android:2.0.2-alpha.5"
+    implementation "com.appier:ads-android:2.1.0"
 
     // appier-ads-android-debug maven
     // implementation "com.appier:ads-android-debug:2.0.2-alpha.4"
 
-    implementation "junit:junit:4.13.2"
     implementation "androidx.appcompat:appcompat:1.2.0"
     implementation "com.google.android.material:material:1.4.0"
 
     // applovin
-    api("com.applovin:applovin-sdk:13.0.1")
+    implementation("com.applovin:applovin-sdk:13.0.1")
 
     testImplementation "junit:junit:4.13.2"
     androidTestImplementation "androidx.test.ext:junit:1.1.5"

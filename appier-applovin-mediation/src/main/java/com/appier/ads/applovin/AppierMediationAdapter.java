@@ -2,8 +2,6 @@ package com.appier.ads.applovin;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -14,8 +12,6 @@ import com.appier.ads.AppierBannerAd;
 import com.appier.ads.AppierError;
 import com.appier.ads.AppierInterstitialAd;
 import com.appier.ads.AppierNativeAd;
-import com.appier.ads.common.BrowserUtil;
-import com.appier.ads.common.ImageLoader;
 import com.applovin.mediation.MaxAdFormat;
 import com.applovin.mediation.adapter.MaxAdViewAdapter;
 import com.applovin.mediation.adapter.MaxAdapterError;
@@ -32,9 +28,7 @@ import com.applovin.sdk.AppLovinSdk;
 
 import org.json.JSONException;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 public class AppierMediationAdapter extends MediationAdapterBase implements MaxInterstitialAdapter, MaxNativeAdAdapter, MaxAdViewAdapter {
     private AppierInterstitialAd appierInterstitialAd;
@@ -98,32 +92,29 @@ public class AppierMediationAdapter extends MediationAdapterBase implements MaxI
     public void loadAdViewAd(MaxAdapterResponseParameters parameters, MaxAdFormat maxAdFormat, Activity activity, final MaxAdViewAdapterListener adapterListener) {
         String adUnitId = parameters.getAdUnitId();
         String placementId = parameters.getThirdPartyAdPlacementId();
-        AppierLog("Load AdViewAd for placement id:" + placementId + ", type:" + maxAdFormat.getLabel() + "...");
-        if (bannerAd != null) {
-            AppierLog("BannerAd: isLoaded: " + bannerAd.isLoaded() + ", ZoneId:" + bannerAd.getZoneId());
-        }
+        AppierLog("Load AdViewAd:" + adUnitId + " for placement id:" + placementId + ", type:" + maxAdFormat.getLabel() + "...");
         bannerAd = new AppierBannerAd(activity.getApplicationContext(), new AppierAdUnitIdentifier(adUnitId), new AppierBannerAd.EventListener() {
             @Override
             public void onAdLoaded(AppierBannerAd appierBannerAd) {
-                AppierLog("onAdLoaded");
+                AppierLog("onAdLoaded:" + adUnitId);
                 adapterListener.onAdViewAdLoaded(appierBannerAd.getView());
             }
 
             @Override
             public void onAdNoBid(AppierBannerAd appierBannerAd) {
-                AppierLog("onAdNoBid");
+                AppierLog("onAdNoBid:" + adUnitId);
                 adapterListener.onAdViewAdLoadFailed(toMaxError(MaxAdapterError.ERROR_CODE_UNSPECIFIED, "Ad No Bid"));
             }
 
             @Override
             public void onAdLoadFail(AppierError appierError, AppierBannerAd appierBannerAd) {
-                AppierLog("onAdLoadFail");
+                AppierLog("onAdLoadFail:" + adUnitId);
                 adapterListener.onAdViewAdLoadFailed(toMaxError(MaxAdapterError.ERROR_CODE_INVALID_LOAD_STATE, appierError));
             }
 
             @Override
             public void onViewClick(AppierBannerAd appierBannerAd) {
-                AppierLog("onViewClick");
+                AppierLog("onViewClick:" + adUnitId);
                 adapterListener.onAdViewAdClicked();
             }
         });
@@ -135,48 +126,48 @@ public class AppierMediationAdapter extends MediationAdapterBase implements MaxI
     public void loadInterstitialAd(MaxAdapterResponseParameters parameters, Activity activity, final MaxInterstitialAdapterListener adapterListener) {
         String adUnitId = parameters.getAdUnitId();
         String placementId = parameters.getThirdPartyAdPlacementId();
-        AppierLog("Load InterstitialAd for placement id:" + placementId + "...");
+        AppierLog("Load InterstitialAd:" + adUnitId + " for placement id:" + placementId + "...");
 
         appierInterstitialAd = new AppierInterstitialAd(activity.getApplicationContext(), new AppierAdUnitIdentifier(adUnitId), new AppierInterstitialAd.EventListener() {
             @Override
             public void onAdLoaded(AppierInterstitialAd appierInterstitialAd) {
-                AppierLog("onAdLoaded");
+                AppierLog("onAdLoaded:" + adUnitId);
                 adapterListener.onInterstitialAdLoaded();
             }
 
             @Override
             public void onAdNoBid(AppierInterstitialAd appierInterstitialAd) {
-                AppierLog("onAdNoBid");
+                AppierLog("onAdNoBid:" + adUnitId);
                 adapterListener.onInterstitialAdLoadFailed(toMaxError(MaxAdapterError.ERROR_CODE_NO_FILL, "Ad No Bid"));
             }
 
             @Override
             public void onAdLoadFail(AppierError appierError, AppierInterstitialAd appierInterstitialAd) {
-                AppierLog("onAdLoadFail");
+                AppierLog("onAdLoadFail:" + adUnitId);
                 adapterListener.onInterstitialAdLoadFailed(toMaxError(MaxAdapterError.ERROR_CODE_INVALID_LOAD_STATE, appierError));
             }
 
             @Override
             public void onViewClick(AppierInterstitialAd appierInterstitialAd) {
-                AppierLog("onViewClick");
+                AppierLog("onViewClick:" + adUnitId);
                 adapterListener.onInterstitialAdClicked();
             }
 
             @Override
             public void onShown(AppierInterstitialAd appierInterstitialAd) {
-                AppierLog("onShown");
+                AppierLog("onShown:" + adUnitId);
                 adapterListener.onInterstitialAdDisplayed();
             }
 
             @Override
             public void onShowFail(AppierError appierError, AppierInterstitialAd appierInterstitialAd) {
-                AppierLog("onShowFail");
+                AppierLog("onShowFail:" + adUnitId);
                 adapterListener.onInterstitialAdDisplayFailed(toMaxError(MaxAdapterError.ERROR_CODE_AD_DISPLAY_FAILED, appierError));
             }
 
             @Override
             public void onDismiss(AppierInterstitialAd appierInterstitialAd) {
-                AppierLog("onDismiss");
+                AppierLog("onDismiss:" + adUnitId);
                 adapterListener.onInterstitialAdHidden();
             }
         });
@@ -187,11 +178,12 @@ public class AppierMediationAdapter extends MediationAdapterBase implements MaxI
     @Override
     public void showInterstitialAd(MaxAdapterResponseParameters parameters, Activity activity, MaxInterstitialAdapterListener adapterListener) {
         String placementId = parameters.getThirdPartyAdPlacementId();
-        AppierLog("Show InterstitialAd for placement id:" + placementId + "...");
+        String adUnitId = parameters.getAdUnitId();
+        AppierLog("Show InterstitialAd:" + adUnitId + " for placement id:" + placementId + "...");
         if (appierInterstitialAd.isLoaded()) {
             appierInterstitialAd.showAd();
         } else {
-            AppierLog("Interstitial Ad is not loaded");
+            AppierLog("Interstitial Ad:" + adUnitId + " is not loaded");
             adapterListener.onInterstitialAdDisplayFailed(MaxAdapterError.AD_NOT_READY);
         }
     }
@@ -201,12 +193,11 @@ public class AppierMediationAdapter extends MediationAdapterBase implements MaxI
         String adUnitId = parameters.getAdUnitId();
         String placementId = parameters.getThirdPartyAdPlacementId();
         final Context context = activity.getApplicationContext();
-        AppierLog("Load Native Ad for placement id:" + placementId + "...");
-
+        AppierLog("Load Native Ad:" + adUnitId + " for placement id:" + placementId + "...");
         nativeAd = new AppierNativeAd(activity.getApplicationContext(), new AppierAdUnitIdentifier(adUnitId), new AppierNativeAd.EventListener() {
             @Override
             public void onAdLoaded(AppierNativeAd appierNativeAd) {
-                AppierLog("onAdLoaded" + ", network host:" + appierNativeAd.getNetworkHost());
+                AppierLog("onAdLoaded:" + adUnitId + ", network host:" + appierNativeAd.getNetworkHost());
                 nativeAd = appierNativeAd;
                 try {
                     final MaxNativeAd.Builder builder = new MaxNativeAd.Builder()
@@ -216,131 +207,89 @@ public class AppierMediationAdapter extends MediationAdapterBase implements MaxI
                             .setBody(appierNativeAd.getText())
                             .setCallToAction(appierNativeAd.getCallToActionText());
 
-                    String iconImageUrl = appierNativeAd.getIconImageUrl();
-                    String mainImageUrl = appierNativeAd.getMainImageUrl();
-                    String optionImageUrl = appierNativeAd.getPrivacyInformationIconImageUrl();
+                    ImageView main = new ImageView(context);
+                    ImageView icon = new ImageView(context);
+                    ImageView option = new ImageView(context);
+                    appierNativeAd.setupAdImages(main, icon, option);
 
-                    ImageLoader imageLoader = new ImageLoader(context);
-                    imageLoader.batchLoadImages(Arrays.asList(mainImageUrl, iconImageUrl, optionImageUrl), new ImageLoader.OnBatchImageEventListenerWithResult() {
-                        @Override
-                        public void onBatchImageLoadedAndCached(Map<String, Drawable> drawables) {
-                            Drawable mainImageDrawable = drawables.get(mainImageUrl);
-                            Drawable iconImageDrawable = drawables.get(iconImageUrl);
-                            Drawable optionImageDrawable = drawables.get(optionImageUrl);
-                            // The main image must be set by setMediaView
-                            if (mainImageDrawable != null) {
-                                ImageView imageView = new ImageView(context);
-                                imageView.setImageDrawable(mainImageDrawable);
-                                imageView.setAdjustViewBounds(true);
-                                builder.setMediaView(imageView);
-                            } else {
-                                AppierLog("Drawable for media view is null");
-                            }
+                    builder.setMediaView(main);
+                    builder.setIcon(new MaxNativeAd.MaxNativeAdImage(icon.getDrawable()));
+                    builder.setOptionsView(option);
 
-                            if (iconImageDrawable != null) {
-                                builder.setIcon(new MaxNativeAd.MaxNativeAdImage(iconImageDrawable));
-                            } else {
-                                AppierLog("Drawable for icon is null");
-                            }
-
-                            if (optionImageDrawable != null) {
-                                ImageView imageView = new ImageView(context);
-                                imageView.setImageDrawable(optionImageDrawable);
-                                imageView.setBackgroundColor(Color.TRANSPARENT);
-                                builder.setOptionsView(imageView);
-                            } else {
-                                AppierLog("Drawable for option view is null");
-                            }
-
-                            MaxAppierNativeAd maxAppierNativeAd = new MaxAppierNativeAd(builder, context, adapterListener);
-                            adapterListener.onNativeAdLoaded(maxAppierNativeAd, null);
-                        }
-
-                        @Override
-                        public void onBatchImageLoadFail() {
-                            adapterListener.onNativeAdLoadFailed(toMaxError(MaxAdapterError.ERROR_CODE_MISSING_REQUIRED_NATIVE_AD_ASSETS, "Fail to load images"));
-                        }
-                    });
-                } catch (JSONException e) {
+                    MaxAppierNativeAd maxAppierNativeAd = new MaxAppierNativeAd(builder);
+                    adapterListener.onNativeAdLoaded(maxAppierNativeAd, null);
+                } catch (Throwable e) {
                     adapterListener.onNativeAdLoadFailed(toMaxError(MaxAdapterError.ERROR_CODE_MISSING_REQUIRED_NATIVE_AD_ASSETS, "Fail to load images:" + e.getMessage()));
                 }
             }
 
             @Override
             public void onAdNoBid(AppierNativeAd appierNativeAd) {
-                AppierLog("onAdNoBid");
+                AppierLog("onAdNoBid:" + adUnitId);
                 adapterListener.onNativeAdLoadFailed(toMaxError(MaxAdapterError.ERROR_CODE_UNSPECIFIED, "Ad No Bid"));
             }
 
             @Override
             public void onAdLoadFail(AppierError appierError, AppierNativeAd appierNativeAd) {
-                AppierLog("onAdLoadFail");
+                AppierLog("onAdLoadFail:" + adUnitId);
                 adapterListener.onNativeAdLoadFailed(toMaxError(MaxAdapterError.ERROR_CODE_INVALID_LOAD_STATE, appierError));
             }
 
             @Override
             public void onAdShown(AppierNativeAd appierNativeAd) {
-                AppierLog("onAdShown");
+                AppierLog("onAdShown:" + adUnitId);
                 adapterListener.onNativeAdDisplayed(null);
             }
 
             @Override
             public void onImpressionRecorded(AppierNativeAd appierNativeAd) {
-                AppierLog("onImpressionRecorded");
+                AppierLog("onImpressionRecorded:" + adUnitId);
             }
 
             @Override
             public void onImpressionRecordFail(AppierError appierError, AppierNativeAd appierNativeAd) {
-                AppierLog("onImpressionRecorded");
+                AppierLog("onImpressionRecorded:" + adUnitId);
             }
 
             @Override
             public void onAdClick(AppierNativeAd appierNativeAd) {
-                AppierLog("onAdClick");
+                AppierLog("onAdClick:" + adUnitId);
                 adapterListener.onNativeAdClicked();
             }
 
             @Override
             public void onAdClickFail(AppierError appierError, AppierNativeAd appierNativeAd) {
-                AppierLog("onAdClickFail");
+                AppierLog("onAdClickFail:" + adUnitId);
             }
         });
         nativeAd.setZoneId(placementId);
-        nativeAd.loadAdWithExternalCache();
+        nativeAd.loadAd();
     }
 
     // Helper class to map AppierNativeAd to MaxNativeAd
     private class MaxAppierNativeAd
             extends MaxNativeAd {
 
-        final MaxNativeAdAdapterListener listener;
-        final Context context;
-        final BrowserUtil browserUtil;
-
-        private MaxAppierNativeAd(final Builder builder, Context context, MaxNativeAdAdapterListener listener) {
+        private MaxAppierNativeAd(final Builder builder) {
             super(builder);
-            this.listener = listener;
-            this.context = context;
-
-            browserUtil = new BrowserUtil(this.context);
-            if (Appier.getBrowserAgent() == Appier.BrowserAgent.NATIVE) {
-                browserUtil.disableInternalBrowser();
-            } else {
-                browserUtil.enableInternalBrowser();
-            }
         }
 
         @Override
         public boolean prepareForInteraction(final List<View> clickableViews, final ViewGroup container) {
             final AppierNativeAd appierNativeAd = nativeAd;
+
             if (nativeAd == null) {
-                Appier.log("Failed to register native ad views: native ad is null.");
+                Appier.log("Failed to register native ad views: Native ad is null.");
                 return false;
             }
 
-            // To avoid `java.lang.IllegalArgumentException: Invalid set of clickable views` with size=0
+            if (container == null) {
+                Appier.log("Failed to register native ad views: Container is null.");
+                return false;
+            }
+
             if (clickableViews.isEmpty()) {
-                Appier.log("No clickable views to prepare");
+                Appier.log("Failed to register native ad views: No clickable views to prepare");
                 return false;
             }
 
@@ -349,37 +298,8 @@ public class AppierMediationAdapter extends MediationAdapterBase implements MaxI
                 clickableViews.add(getMediaView());
             }
 
-            // Setup option view click action if exists
-            if (getOptionsView() != null) {
-                getOptionsView().setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        try {
-                            if (browserUtil.tryToOpenUrl(appierNativeAd.getPrivacyInformationIconClickThroughUrl())) {
-                                listener.onNativeAdClicked();
-                            }
-                        } catch (JSONException e) {
-                            AppierLog("Fail to open privacy information url when native ad clicked");
-                        }
-                    }
-                });
-            }
-
-            // Setup click action for other clickable views
-            for (final View clickableView : clickableViews) {
-                clickableView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        try {
-                            if (browserUtil.tryToOpenUrl(appierNativeAd.getClickDestinationUrl())) {
-                                listener.onNativeAdClicked();
-                            }
-                        } catch (JSONException e) {
-                            AppierLog("Fail to open url when native ad clicked");
-                        }
-                    }
-                });
-            }
+            // Bind view events
+            appierNativeAd.bindAdViewInteractions(container, getOptionsView(), clickableViews);
             return true;
         }
     }

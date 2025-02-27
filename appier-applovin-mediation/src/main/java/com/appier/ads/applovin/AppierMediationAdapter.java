@@ -218,7 +218,7 @@ public class AppierMediationAdapter extends MediationAdapterBase implements MaxI
 
                     MaxAppierNativeAd maxAppierNativeAd = new MaxAppierNativeAd(builder);
                     adapterListener.onNativeAdLoaded(maxAppierNativeAd, null);
-                } catch (JSONException e) {
+                } catch (Throwable e) {
                     adapterListener.onNativeAdLoadFailed(toMaxError(MaxAdapterError.ERROR_CODE_MISSING_REQUIRED_NATIVE_AD_ASSETS, "Fail to load images:" + e.getMessage()));
                 }
             }

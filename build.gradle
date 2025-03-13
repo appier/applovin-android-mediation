@@ -1,0 +1,35 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    ext {
+        // https://developer.android.com/build/kotlin-support
+        // For Kotlin 1.8, gradle version should be 7.4
+        gradleVersion = '7.4.2'
+        kotlinVersion = '1.8.22'
+    }
+
+    repositories {
+        google()
+        mavenLocal()
+        mavenCentral()
+        maven { url 'https://s01.oss.sonatype.org/content/groups/staging/' }
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:${gradleVersion}"
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}"
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenLocal()
+        mavenCentral()
+        maven { url 'https://s01.oss.sonatype.org/content/groups/staging/' }
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

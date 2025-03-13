@@ -1,0 +1,4 @@
+rootProject.name = "appier-applovin-android-mediation"
+include ':appier-applovin-mediation'
+include ':appier-ads-android'
+project (':appier-ads-android').projectDir = new File('../appier-ads-android/appier-ads-android')

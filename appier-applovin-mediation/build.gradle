@@ -1,0 +1,61 @@
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    namespace 'com.appier.ads.appier.applovin.mediation'
+    compileSdk 34
+
+    defaultConfig {
+        minSdk 19
+        targetSdk 34
+        versionCode 1
+        versionName "2.1.0"
+        multiDexEnabled true
+        buildConfigField "String", "APPIER_ADVERTISER_NAME", '"Appier"'
+        buildConfigField "String", "VERSION_NAME", "\"${versionName}\""
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
+
+    namespace = "com.appier.mediation.applovin"
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', includes: ['*.jar'])
+
+    // appier-ads-android local
+//     implementation project(':appier-ads-android')
+
+    // appier-ads-android maven
+    implementation "com.appier:ads-android:2.1.0"
+
+    // appier-ads-android-debug maven
+    // implementation "com.appier:ads-android-debug:2.0.2-alpha.4"
+
+    implementation "androidx.appcompat:appcompat:1.2.0"
+    implementation "com.google.android.material:material:1.4.0"
+
+    // applovin
+    implementation("com.applovin:applovin-sdk:13.0.1")
+
+    testImplementation "junit:junit:4.13.2"
+    androidTestImplementation "androidx.test.ext:junit:1.1.5"
+    androidTestImplementation "androidx.test.espresso:espresso-core:3.5.1"
+}
+
+project.version = android.defaultConfig.versionName
+
+apply from: "tools.gradle"
+apply from: "publish.gradle"
